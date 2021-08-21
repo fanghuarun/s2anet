@@ -60,7 +60,7 @@ test_cfg = dict(
     max_per_img=2000)
 # dataset settings
 dataset_type = 'DotaDataset'
-data_root = 'data/dota_1024/'
+data_root = 'data/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -89,26 +89,26 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=2,
+    imgs_per_gpu=6,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'trainval_split/trainval_s2anet.pkl',
+        ann_file=data_root + 'trainval_split/trainval1024.pkl',
         img_prefix=data_root + 'trainval_split/images/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'trainval_split/trainval_s2anet.pkl',
+        ann_file=data_root + 'trainval_split/trainval1024.pkl',
         img_prefix=data_root + 'trainval_split/images/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'test_split/test_s2anet.pkl',
+        ann_file=data_root + 'test_split/test1024.pkl',
         img_prefix=data_root + 'test_split/images/',
         pipeline=test_pipeline))
-evaluation = dict(
-    gt_dir='data/dota/test/labelTxt/',
-    imagesetfile='data/dota/test/test.txt')
+# evaluation = dict(
+#     gt_dir='data/dota/test/labelTxt/',
+#     imagesetfile='data/dota/test/test.txt')
 # optimizer
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
@@ -119,7 +119,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[8, 11])
-checkpoint_config = dict(interval=12)
+checkpoint_config = dict(interval=2)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -129,7 +129,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 12
+total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = None

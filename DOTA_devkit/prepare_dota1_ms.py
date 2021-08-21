@@ -48,5 +48,6 @@ def prepare_multi_scale_data(src_path, dst_path, gap=200, subsize=1024, scales=[
 
 
 if __name__ == '__main__':
-    prepare_multi_scale_data('/data/hjm/dota', '/data/hjm/dota_1024', gap=200, subsize=1024, scales=[1.0],
+    prepare_multi_scale_data('/media/pan/BACKUPT1/PycharmProjects/Datasets/DOTA',
+                             '/media/pan/BACKUPT1/PycharmProjects/Datasets/DOTA-split', gap=200, subsize=1024, scales=[1.0],
                              num_process=32)
