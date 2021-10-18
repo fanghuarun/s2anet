@@ -19,7 +19,7 @@ def show_result_rbox(img,
                      scale=1.0,
                      threshold=0.2,
                      colormap=None,
-                     show_label=False):
+                     show_label=True):
     assert isinstance(class_names, (tuple, list))
     if colormap:
         assert len(class_names) == len(colormap)
@@ -48,7 +48,7 @@ def show_result_rbox(img,
                 cv2.line(img, (bbox[i * 2], bbox[i * 2 + 1]), (bbox[(i + 1) * 2], bbox[(i + 1) * 2 + 1]), color=color,
                          thickness=2, lineType=cv2.LINE_AA)
             cv2.line(img, (bbox[6], bbox[7]), (bbox[0], bbox[1]), color=color, thickness=2, lineType=cv2.LINE_AA)
-            if show_label:
+            if True:
                 cv2.putText(img, '%s %.3f' % (class_names[j], score), (bbox[0], bbox[1] + 10),
                             color=color_white, fontFace=cv2.FONT_HERSHEY_COMPLEX, fontScale=0.5)
     return img
@@ -77,7 +77,7 @@ def save_det_result(config_file, out_dir, checkpoint_file=None, img_dir=None, co
                                result,
                                classnames,
                                scale=1.0,
-                               threshold=0.5,
+                               threshold=0.8,
                                colormap=colormap)
         print(img_out_path)
         cv2.imwrite(img_out_path, img)

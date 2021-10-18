@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from mmdet.core import (force_fp32, build_bbox_coder)
 from mmdet.core.bbox.iou_calculators import BboxOverlaps2D_rotated
 
-from retina_head_rotated import RetinaHeadRotated
+from .retina_head_rotated import RetinaHeadRotated
 from ..builder import HEADS
 
 EPS = 1e-12
@@ -111,6 +111,8 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
             bbox_coder_cfg = dict(type='DeltaXYWHBBoxCoder')
         bbox_coder = build_bbox_coder(bbox_coder_cfg)
 
+        iou_calculator = BboxOverlaps2D_rotated()
+
         for _, (anchors_, gt_labels_, gt_bboxes_, cls_prob_,
                 bbox_preds_) in enumerate(
             zip(anchors, gt_labels, gt_bboxes, cls_prob, bbox_preds)):
@@ -125,7 +127,7 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
 
                     pred_boxes = bbox_coder.decode(anchors_, bbox_preds_)
                     # object_box_iou: IoU_{ij}^{loc}, shape: [i, j]
-                    object_box_iou = BboxOverlaps2D_rotated(gt_bboxes_, pred_boxes)
+                    object_box_iou = iou_calculator.__call__(gt_bboxes_, pred_boxes)
 
                     # object_box_prob: P{a_{j} -> b_{i}}, shape: [i, j]
                     t1 = self.bbox_thr
@@ -176,7 +178,7 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
                 box_prob.append(image_box_prob)
 
             # construct bags for objects
-            match_quality_matrix = BboxOverlaps2D_rotated(gt_bboxes_, anchors_)
+            match_quality_matrix = iou_calculator.__call__(gt_bboxes_, anchors_)
             _, matched = torch.topk(
                 match_quality_matrix,
                 self.pre_anchor_topk,
