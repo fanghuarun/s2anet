@@ -70,6 +70,8 @@ def smallest_horizontal_bounding_box(bbox_1:Tensor,bbox_2:Tensor)->(int,int,int,
     :return: (x_min,y_min,x_max,y_max)
     """
     c1_x, c1_y,c1_theta = bbox_1[0].item(), bbox_1[1].item(),bbox_1[4].item()
+    # c1_x = 0 if c1_x<0 else c1_x
+    # c1_y = 0 if c1_y<0 else c1_y
 
     c1_w_ = bbox_1[2].item()/ 2
     c1_h_ = bbox_1[3].item()/ 2
@@ -88,7 +90,9 @@ def smallest_horizontal_bounding_box(bbox_1:Tensor,bbox_2:Tensor)->(int,int,int,
     c2_x, c2_y ,c2_theta = bbox_2[0].item(), bbox_2[1].item(),bbox_2[4].item()
     c2_w_ = bbox_2[2].item()*math.cos(c1_theta)/ 2
     c2_h_ = bbox_2[3].item()*math.sin(c1_theta)/ 2
-    
+    # c2_x = 0 if c2_x<0 else c2_x
+    # c2_y = 0 if c2_y<0 else c2_y
+
     x,y = rotate_transformation( c2_x + c2_w_,c2_y + c2_h_,c2_theta)
     xs.append(x)
     ys.append(y)
@@ -126,13 +130,13 @@ def PIoU(bboxs_1:Tensor,bboxs_2:Tensor):
             x_min, y_min, x_max, y_max = smallest_horizontal_bounding_box(bbox_1, bbox_2)
             # the value of intersection area
             s_intersect = float(0)
-
+            print("({},{},{},{})".format(x_min,y_min,x_max,y_max))
             for x in range(int(x_min), int(x_max) + 1):
                 for y in range(int(y_min), int(y_max) + 1):
                     s_intersect = s_intersect + judge_relative_loc(x, y, bbox_1) * judge_relative_loc(x, y, bbox_2)
             s_uniou = bbox_1[2].item() * bbox_1[3].item() + bbox_2[2].item() * bbox_2[3].item() - s_intersect  # the value of union area.
             _pious.append(s_intersect / s_uniou)
-
+        print(_pious)
         pious.append(_pious)
     return torch.tensor(pious)
 

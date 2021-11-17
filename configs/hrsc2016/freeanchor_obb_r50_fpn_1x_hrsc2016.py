@@ -2,7 +2,7 @@
 import os
 
 model = dict(
-    type='S2ANetDetector',
+    type='RetinaNet',
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
@@ -19,65 +19,39 @@ model = dict(
         add_extra_convs=True,
         num_outs=5),
     bbox_head=dict(
-        type='S2ANetHead',
-        num_classes=2,
+        type='FreeAnchorHeadRotated',
+        num_classes=16,
         in_channels=256,
+        stacked_convs=4,
         feat_channels=256,
-        stacked_convs=2,
-        with_orconv=True,
-        anchor_ratios=[1.0],
+        octave_base_scale=4,
+        scales_per_octave=3,
+        anchor_ratios=[0.5, 1.0, 2.0],
+        anchor_angles=[0., ],
         anchor_strides=[8, 16, 32, 64, 128],
-        anchor_scales=[4],
         target_means=[.0, .0, .0, .0, .0],
         target_stds=[1.0, 1.0, 1.0, 1.0, 1.0],
-        loss_fam_cls=dict(
-            type='FocalLoss',
-            use_sigmoid=True,
-            gamma=2.0,
-            alpha=0.25,
-            loss_weight=1.0),
-        loss_fam_bbox=dict(
-            type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0),
-        loss_odm_cls=dict(
-            type='FocalLoss',
-            use_sigmoid=True,
-            gamma=2.0,
-            alpha=0.25,
-            loss_weight=1.0),
-        loss_odm_bbox=dict(
-            type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)))
+        loss_cls=dict(
+                    type='CrossEntropyLoss',
+                    use_sigmoid=False,
+                    loss_weight=1.0),
+        loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=0.75)))
 # training and testing settings
 train_cfg = dict(
-    fam_cfg=dict(
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.5,
-            neg_iou_thr=0.4,
-            min_pos_iou=0,
-            ignore_iof_thr=-1,
-            iou_calculator=dict(type='BboxOverlaps2D_rotated')),
-        bbox_coder=dict(type='DeltaXYWHABBoxCoder',
-                        target_means=(0., 0., 0., 0., 0.),
-                        target_stds=(1., 1., 1., 1., 1.),
-                        clip_border=True),
-        allowed_border=-1,
-        pos_weight=-1,
-        debug=False),
-    odm_cfg=dict(
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.6,
-            neg_iou_thr=0.5,
-            min_pos_iou=0,
-            ignore_iof_thr=-1,
-            iou_calculator=dict(type='BboxOverlaps2D_rotated')),
-        bbox_coder=dict(type='DeltaXYWHABBoxCoder',
-                        target_means=(0., 0., 0., 0., 0.),
-                        target_stds=(1., 1., 1., 1., 1.),
-                        clip_border=True),
-        allowed_border=-1,
-        pos_weight=-1,
-        debug=False))
+    assigner=dict(
+        type='MaxIoUAssigner',
+        pos_iou_thr=0.5,
+        neg_iou_thr=0.4,
+        min_pos_iou=0,
+        ignore_iof_thr=-1,
+        iou_calculator=dict(type='BboxOverlaps2D_rotated')),
+    bbox_coder=dict(type='DeltaXYWHABBoxCoder',
+                    target_means=(0., 0., 0., 0., 0.),
+                    target_stds=(1., 1., 1., 1., 1.),
+                    clip_border=True),
+    allowed_border=-1,
+    pos_weight=-1,
+    debug=False)
 test_cfg = dict(
     nms_pre=2000,
     min_bbox_size=0,
@@ -92,9 +66,9 @@ data_root = os.path.join("data","HRSC2016","HRSC2016")
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile',),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='RotatedResize', img_scale=(400, 250), keep_ratio=True),
+    dict(type='RotatedResize', img_scale=(150, 200), keep_ratio=True),
     dict(type='RotatedRandomFlip', flip_ratio=0.5),
     dict(type='RandomRotate', rate=0.5, angles=[30, 60, 90, 120, 150], auto_bound=False),
     dict(type='Normalize', **img_norm_cfg),

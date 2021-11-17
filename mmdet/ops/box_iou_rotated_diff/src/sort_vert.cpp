@@ -1,5 +1,8 @@
 #include "utils.h"
 #include "sort_vert.h"
+#ifndef AT_CHECK
+#define AT_CHECK TORCH_CHECK
+#endif
 
 void sort_vertices_wrapper(int b, int n, int m, const float *vertices, const bool *mask, const int *num_valid, int* idx);
 

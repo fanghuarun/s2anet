@@ -1,13 +1,15 @@
 import torch
 import torch.nn.functional as F
 from mmdet.core import (force_fp32, build_bbox_coder)
-from mmdet.core.bbox.iou_calculators import BboxOverlaps2D_rotated
+from mmdet.core.bbox.iou_calculators import BboxOverlaps2D_rotated,HPIoUs,HPIous_box_betweem_boxs
 
 from .retina_head_rotated import RetinaHeadRotated
 from ..builder import HEADS
 
 EPS = 1e-12
-
+PIOU_THRESHOLD = 0.35
+PIOU_K = 100
+TEST_DEBUG = True
 
 @HEADS.register_module
 class FreeAnchorHeadRotated(RetinaHeadRotated):
@@ -110,8 +112,8 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
         if bbox_coder_cfg == '':
             bbox_coder_cfg = dict(type='DeltaXYWHBBoxCoder')
         bbox_coder = build_bbox_coder(bbox_coder_cfg)
-
-        iou_calculator = BboxOverlaps2D_rotated()
+#iou
+        # iou_calculator = BboxOverlaps2D_rotated()
 
         for _, (anchors_, gt_labels_, gt_bboxes_, cls_prob_,
                 bbox_preds_) in enumerate(
@@ -127,7 +129,22 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
 
                     pred_boxes = bbox_coder.decode(anchors_, bbox_preds_)
                     # object_box_iou: IoU_{ij}^{loc}, shape: [i, j]
-                    object_box_iou = iou_calculator.__call__(gt_bboxes_, pred_boxes)
+
+
+                    if TEST_DEBUG:
+                        assert len(pred_boxes.size()) < 3
+                        print("gt_bboxes_'s shape is ", gt_bboxes_.size())
+                        print("pred_boxes's shape is ", pred_boxes.size())
+
+                    # object_box_iou = iou_calculator.__call__(gt_bboxes_, pred_boxes)
+                    object_box_iou = HPIoUs(gt_bboxes_,pred_boxes,PIOU_K)
+
+                    piou_loss = self.piou_loss(object_box_iou,PIOU_THRESHOLD)
+
+
+                    if TEST_DEBUG:
+                        print("object_box_iou's shape is ", object_box_iou.size())
+                        print("object box iou is ",object_box_iou)
 
                     # object_box_prob: P{a_{j} -> b_{i}}, shape: [i, j]
                     t1 = self.bbox_thr
@@ -135,12 +152,13 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
                         dim=1, keepdim=True).values.clamp(min=t1 + EPS)
                     object_box_prob = ((object_box_iou - t1) /
                                        (t2 - t1)).clamp(
-                        min=0, max=1)
+                        min=0, max=1).cuda()
                     # object_cls_box_prob: P{a_{j} -> b_{i}}, shape: [i, c, j]
                     num_obj = gt_labels_.size(0)
                     indices = torch.stack([
                         torch.arange(num_obj).type_as(gt_labels_), gt_labels_
-                    ], dim=0)
+                    ], dim=0).cuda()
+
                     object_cls_box_prob = torch.sparse_coo_tensor(
                         indices, object_box_prob)
 
@@ -178,7 +196,13 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
                 box_prob.append(image_box_prob)
 
             # construct bags for objects
-            match_quality_matrix = iou_calculator.__call__(gt_bboxes_, anchors_)
+            # match_quality_matrix = iou_calculator.__call__(gt_bboxes_, anchors_)
+            match_quality_matrix = HPIoUs(gt_bboxes_,anchors_,PIOU_K)
+            if TEST_DEBUG:
+                print("gt_bboxes's shape is {}", gt_bboxes_.size())
+                print("anchors_'s shape is {}", pred_boxes.size())
+                print("match_quality_matrix's shape is {}", object_box_iou.size())
+
             _, matched = torch.topk(
                 match_quality_matrix,
                 self.pre_anchor_topk,
@@ -224,8 +248,33 @@ class FreeAnchorHeadRotated(RetinaHeadRotated):
         if num_pos == 0:
             positive_loss = bbox_preds.sum() * 0
 
-        losses = dict(positive_bag_loss=positive_loss, negative_bag_loss=negative_loss)
+        if TEST_DEBUG:
+            print("--------------positive_loss is ",positive_loss)
+            print("--------------negative_loss is ",negative_loss)
+            print("--------------piou_loss is",piou_loss)
+
+        losses = dict(positive_bag_loss=positive_loss, negative_bag_loss=negative_loss,piou_loss=piou_loss)
         return losses
+
+    def piou_loss(self,pious,limit):
+        """
+         compute piou loss.
+        :param pious:
+        :param limit:the threhold that datemine where
+        :return:
+        """
+        zero_as_pious = torch.zeros_like(pious)
+        one_as_pious = torch.ones_like(pious)
+        indexs = pious > limit
+        #the number of positive samples. M
+        size_pious = torch.where(indexs, one_as_pious, zero_as_pious)
+        value_pious = torch.where(indexs, pious.log(), zero_as_pious)
+        size_pious = size_pious.sum(1)
+        #the sum of all positive samples.
+        value_pious = value_pious.sum(1)
+        return  -torch.where(size_pious > 0, value_pious / size_pious, torch.zeros_like(size_pious))
+
+
 
     def positive_bag_loss(self, matched_cls_prob, matched_box_prob):
         """Compute positive bag loss.

@@ -2,7 +2,9 @@
 
 #include <cmath>
 #include <vector>
-
+#ifndef AT_CHECK
+#define AT_CHECK TORCH_CHECK
+#endif
 int ROIAlignForwardLaucher(const at::Tensor features, const at::Tensor rois,
                            const float spatial_scale, const int sample_num,
                            const int channels, const int height,

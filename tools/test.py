@@ -1,5 +1,9 @@
-import argparse
+import sys
 import os
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+import argparse
 import os.path as osp
 import shutil
 import tempfile
@@ -233,4 +237,6 @@ def main():
 
 
 if __name__ == '__main__':
+
+
     main()

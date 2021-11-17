@@ -2,6 +2,9 @@
 #include "box_iou_rotated.h"
 #include "box_iou_rotated_utils.h"
 
+#ifndef AT_CHECK
+#define AT_CHECK TORCH_CHECK
+#endif
 
 template <typename T>
 void box_iou_rotated_cpu_kernel(

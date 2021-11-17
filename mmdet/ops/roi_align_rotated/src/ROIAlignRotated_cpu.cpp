@@ -1,7 +1,9 @@
 // Copyright (c) Facebook, Inc. and its affiliates.
 #include <ATen/TensorUtils.h>
 #include "ROIAlignRotated.h"
-
+#ifndef AT_CHECK
+#define AT_CHECK TORCH_CHECK
+#endif
 // Note: this implementation originates from the Caffe2 ROIAlignRotated Op
 // and PyTorch ROIAlign (non-rotated) Op implementations.
 // The key difference between this implementation and those ones is

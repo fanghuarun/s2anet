@@ -4,6 +4,7 @@ from .deform_conv import (DeformConv, DeformConvPack, ModulatedDeformConv,
 from .deform_pool import (DeformRoIPooling, DeformRoIPoolingPack,
                           ModulatedDeformRoIPoolingPack, deform_roi_pooling)
 
+
 __all__ = [
     'DeformConv', 'DeformConvPack', 'ModulatedDeformConv',
     'ModulatedDeformConvPack', 'DeformRoIPooling', 'DeformRoIPoolingPack',
