@@ -8,7 +8,7 @@ from .registry import DATASETS
 from .voc import VOCDataset
 from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
-
+from .icdar import ICDAR15Dataset
 from .hrsc2016 import HRSC2016Dataset
 from .dota import DotaDataset
 
@@ -17,5 +17,5 @@ __all__ = [
     'CityscapesDataset', 'GroupSampler', 'DistributedGroupSampler',
     'build_dataloader', 'ConcatDataset', 'RepeatDataset',
     'WIDERFaceDataset', 'DATASETS', 'build_dataset',
-    'HRSC2016Dataset','DotaDataset'
+    'HRSC2016Dataset','DotaDataset','ICDAR15Dataset'
 ]
