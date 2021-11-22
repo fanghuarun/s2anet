@@ -1,6 +1,9 @@
 # model settings
 import os
 
+DEVELOP = True
+
+
 model = dict(
     type='RetinaNet',
     pretrained='torchvision://resnet50',
@@ -57,13 +60,13 @@ train_cfg = dict(
 dataset_type = 'TotalTextDataset'
 
 # data_root = 'data/HRSC2016/HRSC2016/'
-data_root = os.path.join("data","totaltext-Train")
+data_root = os.path.join("data","totaltext-Train") if  DEVELOP else os.path.join("D://","SceneTextDB","totaltext")
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile',),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='RotatedResize', img_scale=(100, 200), keep_ratio=True),
+    dict(type='RotatedResize', img_scale=(100, 200) if DEVELOP else (1024,1024), keep_ratio=True),
     dict(type='RotatedRandomFlip', flip_ratio=0.5),
     dict(type='RandomRotate', rate=0.5, angles=[30, 60, 90, 120, 150], auto_bound=False),
     dict(type='Normalize', **img_norm_cfg),
@@ -77,8 +80,8 @@ data = dict(
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        ann_file=os.path.join(data_root,'ann'),
-        img_prefix=os.path.join(data_root, 'image//'),
+        ann_file=os.path.join(data_root,'ann') if DEVELOP else os.path.join(data_root,"GroundTruth","Poly","Train"),
+        img_prefix=os.path.join(data_root, 'image//' if DEVELOP else os.path.join(data_root,"Images","Train")),
         pipeline=train_pipeline),
    )
 # evaluation = dict(
