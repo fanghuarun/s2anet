@@ -11,11 +11,12 @@ from .xml_style import XMLDataset
 from .icdar import ICDAR15Dataset
 from .hrsc2016 import HRSC2016Dataset
 from .dota import DotaDataset
+from .totaltext import TotalTextDataset
 
 __all__ = [
     'CustomDataset', 'XMLDataset', 'CocoDataset', 'VOCDataset',
     'CityscapesDataset', 'GroupSampler', 'DistributedGroupSampler',
     'build_dataloader', 'ConcatDataset', 'RepeatDataset',
     'WIDERFaceDataset', 'DATASETS', 'build_dataset',
-    'HRSC2016Dataset','DotaDataset','ICDAR15Dataset'
+    'HRSC2016Dataset','DotaDataset','ICDAR15Dataset','TotalTextDataset'
 ]
